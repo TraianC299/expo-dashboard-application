@@ -1,5 +1,5 @@
 import React from 'react'
-import { SafeAreaView, StyleSheet } from 'react-native';
+import { SafeAreaView, ScrollView, StyleSheet } from 'react-native';
 import EditScreenInfo from '../components/EditScreenInfo';
 import { Text, View } from '../components/Themed';
 import {useEffect, useState} from 'react';
@@ -11,22 +11,40 @@ import { TabView, SceneMap, TabBar } from 'react-native-tab-view';
 import { WINDOW_HEIGHT, WINDOW_WIDTH } from '../constants/Layout';
 import Constants from 'expo-constants';
 import { globalStyles } from '../styles/global';
+import WaitingSvg from "../assets/svg/waiting.svg";
 
 
-const OrdersRoute = ({orders}) => (
-   <View >
-      <SafeAreaView >
-       <View style={styles.ordersContainer}>
-         {orders.map((order, index) =>
+interface Props {
+  orders: Array<OrderInterface>;
+}
+
+
+interface OrderInterface {
+  incrementedId: Number,
+  _id: String,
+  products: Array<object>,
+  index:number, 
+  status: number
+}
+
+
+
+const OrdersRoute: React.FC<Props> = ({orders}) => (
+   <View style={{flex:1}}>
+      <SafeAreaView style={{flex:1}}>
+       <ScrollView style={styles.ordersContainer}>
+         {orders.length==0?
+           <WaitingSvg style={{height: WINDOW_HEIGHT*0.3, marginTop:WINDOW_HEIGHT*0.1}}></WaitingSvg>
+         :
+         orders.map((order, index) =>
           <Order  index={index}
                          key={order._id}
                          globalId={order._id}
                          id={order.incrementedId}
                          status={order.status}
-                         createdAt={order.createdAt}
                          selectedProducts={order.products}
                          ></Order>)}
-       </View>
+       </ScrollView>
       
       </SafeAreaView>
     </View>

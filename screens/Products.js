@@ -14,11 +14,11 @@ const Products = () => {
     <View style={globalStyles.screen}>
         <SafeAreaView >
             <ScrollView style={{paddingBottom: 150}} showsVerticalScrollIndicator={false}>
-              <Pressable onPress={()=>navigation.navigate("AddProductModal",  {editTitle:""})} style={{...globalStyles.whiteContainer,...globalStyles.dashedBorder, height: 150, justifyContent:"center"}}>
+              <Pressable onPress={()=>navigation.navigate("AddProductModal",  {editId:""})} style={{...globalStyles.whiteContainer,...globalStyles.dashedBorder, height: 150, justifyContent:"center"}}>
               <Feather name="plus-circle" size={24} color={MAINCOLOR} />
                 <Text style={{marginLeft:10, color:MAINCOLOR, ...globalStyles.h6}}>Add a new product</Text>
               </Pressable>
-              {data.products.map((el, index)=><Product {...el} index={index} key={el._id}></Product>)}</ScrollView>
+              {data.products.map((el, index)=><Product {...el} index={index} key={el.id}></Product>)}</ScrollView>
         </SafeAreaView>
     </View>
   )

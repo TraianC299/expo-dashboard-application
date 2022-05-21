@@ -18,51 +18,24 @@ import { useNavigation } from '@react-navigation/native'
 
 
 
+interface Props {
+    image:string,
+    title:string,
+    description:string,
+    price:number,
+    active:boolean,
+    quantity:number,
+    index:number,
+    id:string,
+}
 
-
-
-
-// const Info = styled.div`
-// padding: 10px;
-// text-align: left;
-// height: 100%;
-// position: relative;
-// >div{
-//     display: flex;
-//     align-items: flex-start;
-//     justify-content: space-between;
-//     >h3{
-//         font-weight: 500;
-//     }
-// }
-// >p{
-//     display: -webkit-box;
-// -webkit-line-clamp: 3;
-// -webkit-box-orient: vertical;
-// overflow: hidden;
-// text-overflow: ellipsis;
-// font-size: 0.9rem;
-// color:${DARKGREY};
-// }
-// >span{
-//     position:absolute;
-//     right: 10px;
-//     bottom: 10px;
-// }
-// `
-
-
-
-// const RotateSpinner= styled(FontAwesomeIcon)`
-// animation: ${rotate} 1s linear infinite;`
-
-
-
-const Product = ({image, description, title, id, price, active, index}) => {
+const Product: React.FC<Props> = ({image, description, title, id, price, active, index}) => {
     const {data, setReload} = useData()
     const {currentUser} = useAuth()
     const [loading, setLoading] = useState("")
     const [success, setSuccess] = useState("")
+    const [error, setError] = useState("")
+    const [showOptions, setShowOptions] = useState<boolean>(false)
     const {setSnackObject} = useSnack()
     const navigation = useNavigation()
     
@@ -75,11 +48,15 @@ const Product = ({image, description, title, id, price, active, index}) => {
                 products:[
                     ...newProducts
                 ]
-            }, currentUser.token).then((res)=>{
-                setReload(previous=>!previous)
+            }, currentUser.token)
+            .then((res)=>{
+                setReload((previous:boolean)=>!previous)
                 setLoading("")
                 setSuccess("Successfully toggled Item")
 
+            })
+            .catch(err=>{
+                setError(err.message)
             })
     }
 
@@ -88,32 +65,28 @@ const Product = ({image, description, title, id, price, active, index}) => {
 
     useDidMountEffect(()=>{
         setSnackObject({
-            autoHideDuration:3000,
-            setOpen:setSuccess,
-            textColor:"white", 
-            icon:<Feather name="check-circle" size={24} color="white" /> ,
-            open:success, 
-            color:MAINCOLOR
-        })
-    },[success])
+            success: success,
+            error: error,
+            loading: loading,
+            setSuccess: setSuccess,
+            setError: setError,
+            setLoading: setLoading
+          })
+    },[success, loading, error])
 
 
     return (
         <>
-        <View style={{...styles.constainer,zIndex: 100-index}} >
-                    <ButtonOptions style={{zIndex:9999, position:"absolute", top:10, right:10}} options={[
+        <View style={{...styles.constainer,zIndex: showOptions?1000:0-index, elevation:showOptions?1:0-index}} >
+                    <ButtonOptions open={showOptions} setOpen={setShowOptions} style={{zIndex:9999, position:"absolute", top:10, right:10}} options={[
                         {title: 'Delete Item', icon:<MaterialIcons name="delete-outline" size={WINDOW_HEIGHT*0.025} color={RED} />, onClick: ()=>{deleteDocument(`shops/${data.id}/products`, id).then(()=>setReload(previous=>!previous))}, color:RED},
                         {title: 'Edit Item', icon:<Feather name="edit-2" size={WINDOW_HEIGHT*0.025} color={MAINCOLOR} />, onPress: ()=>{navigation.navigate('AddProductModal', {
-                            editImage: image,
-                            editDescription:description,
-                            editTitle: title,
-                            editPrice:price,
                             editId: id
                         })}, color:MAINCOLOR},
                         {title: loading?"Loading":active?'Disable Item':"Enable Item", icon:loading?<FontAwesome5 name="spinner" size={WINDOW_HEIGHT*0.025} color="black" />:<Feather name="toggle-left" size={24} color={active?DARKGREY:GREEN} />, onPress: ()=>toggleItem(), color:active?DARKGREY:GREEN},
                     ]}></ButtonOptions> 
                 <View>
-                    <Image loadingIndicatorSource={{uri:"https://pukkaberlin.com/wp-content/themes/barberry/images/placeholder.jpg"}} blurRadius={active?0:2} source={{uri:image}} style={{...styles.image}}>
+                    <Image  height={140} width={140} loadingIndicatorSource={{uri:"https://pukkaberlin.com/wp-content/themes/barberry/images/placeholder.jpg"}} blurRadius={active?0:2} source={{uri:image}} style={{...styles.image}}>
                     </Image>
                 </View>
             <View style={styles.info}>
@@ -137,12 +110,13 @@ export default Product
 const styles = StyleSheet.create({
     constainer:{
         height: 150,
-        ...globalStyles.whiteContainer
+        ...globalStyles.whiteContainer,
+        padding: 5
     },
     image:{
         zIndex:1,
-        height: "100%",
-        width: 150,
+        height: 140,
+        width: 140,
         padding: 10,
         borderRadius: 8,
         overflow: "hidden",

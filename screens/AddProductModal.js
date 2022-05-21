@@ -1,8 +1,8 @@
 import { useRoute } from '@react-navigation/native'
 import React, { useEffect, useState } from 'react'
-import { Image, Platform, Pressable, StyleSheet, View } from 'react-native'
+import { Image, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, View } from 'react-native'
 import Input from '../components/Input/Input'
-import { DARKGREY, GREEN, LIGHTGREY, MAINCOLOR, WHITEBLUE } from '../constants/Colors'
+import { DARKGREY, GREEN, LIGHTGREY, MAINCOLOR, RED, WHITE, WHITEBLUE } from '../constants/Colors'
 import { WINDOW_WIDTH } from '../constants/Layout'
 import { useAuth } from '../contexts/AuthContext'
 import { useData } from '../contexts/DataContext'
@@ -13,6 +13,11 @@ import * as ImagePicker from 'expo-image-picker';
 import { postImage, updateData } from '../fetchFunctions'
 import LoadingSpinner from '../components/Utils/LoadingSpinner'
 import useDidMountEffect from '../hooks/useDidMountEffect'
+import Snackbar from '../components/Utils/Snackbar'
+import ImageInput from '../components/Input/ImageInput'
+import AddFileSvg from '../assets/svg/addFiles.svg'
+import { globalStyles } from '../styles/global'
+
 function makeid(length) {
     var result           = '';
     var characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -31,24 +36,23 @@ const fetchImageFromUri = async (uri) => {
   };
 const AddProductModal = () => {
     const route = useRoute()
-    const { editTitle, editDescription, editImage, editPrice, editId } = route.params;
-    const {data} = useData()
+    const {editId } = route.params;
+    const {data, setReload} = useData()
     const {currentUser} = useAuth()
-    const [title, setTitle] = useState(editTitle);
+    const [title, setTitle] = useState("");
     const [titleError, setTitleError] = useState('');
 
 
-    const [description, setDescription] = useState(editDescription);
+    const [description, setDescription] = useState("");
     const [descriptionError, setDescriptionError] = useState('');
 
-    const [price, setPrice] = useState(editPrice);
+    const [price, setPrice] = useState("");
     const [priceError, setPriceError] = useState('');
 
-    const [image, setImage] = useState(editImage);
+    const [image, setImage] = useState("");
     const [imageError, setImageError] = useState('');
     const [disable, setDisable] = useState("")
 
-    const {setSnackObject} = useSnack()
 
 
 
@@ -59,7 +63,19 @@ const AddProductModal = () => {
 
 
 
+
+    useEffect(()=>{
+        if(editId){
+            const editableItem = data.products.find(item => item.id === editId)
+            setTitle(editableItem.title)
+            setDescription(editableItem.description)
+            setPrice(editableItem.price)
+            setImage(editableItem.image)
+        }
+    },[editId])
+
     const postProduct = () => {
+        setLoading(true)
         updateData(`stores/${data._id}`, {
             products: [
                 ...data.products, {
@@ -76,6 +92,7 @@ const AddProductModal = () => {
         }, currentUser.token)
         .then((res)=>{
             setSuccess("Succesfully added a product")
+            setReload(previous=>!previous)
             setLoading(false)
             clearAll()
         })
@@ -85,19 +102,31 @@ const AddProductModal = () => {
 
 
     const editProduct = () => {
-        // updateDocument(`shops/${data.id}/products`,editId, {
-        //     title,
-        //     description,
-        //     price,
-        //     image,
-        //     createdAt: new Date(),
-        //     active: true
-        // }).then((res)=>{
-        //     setSuccess("Succesfully added a product")
-        //     setLoading(false)
-        //     setEditId(null)
-        //     clearAll()
-        // })
+        setLoading(true)
+        const products = data.products
+        const index = products.findIndex(el=>el.id==editId)
+        products[index] = {
+            id: editId,
+            title,
+            description,
+            price,
+            image,
+            createdAt: new Date(),
+            active: true
+        }
+
+        updateData(`stores/${data._id}`, {
+            products: [
+                ...products
+            ]
+           
+        }, currentUser.token)
+        .then((res)=>{
+            setSuccess("Succesfully updated a product")
+            setReload(previous=>!previous)
+            setLoading(false)
+            clearAll()
+        })
     }
 
 
@@ -110,6 +139,7 @@ const AddProductModal = () => {
         isNumber(price)?setPriceError(isNumber(price)):setPriceError(false)
         isNotEmpty(image)?setImageError(isNotEmpty(image)):setImageError(false)
         if(isNotEmpty(title) || isNotEmpty(description) || isNumber(price) || isNotEmpty(image)){
+            setError("Fill all the required fields please!")
             return 
         }
         if(editId){
@@ -157,44 +187,41 @@ const AddProductModal = () => {
             setLoadingImage(true)
             try{
                 
-                const response = await postImage(result)
+                const response = await postImage(result, 250)
                 console.log(response)
 
                 setLoadingImage(false)
                 setImage(response.data.url)
             }catch(err){
-                console.log(err)
+                console.log(JSON.stringify(err))
                 setLoadingImage(false)
 
             }
           
       };}
     
-console.log(route.params)
-      useDidMountEffect(()=>{
-        setSnackObject({
-            autoHideDuration:3000,
-            setOpen:setSuccess,
-            textColor:"white", 
-            icon:<Feather name="check-circle" size={24} color="white" /> ,
-            open:success, 
-            color:MAINCOLOR
-        })
-    },[success])
+ 
   return (
     <View style={styles.container}>
-        
-        <Pressable onPress={()=>pickImage()} style={styles.imageInput}>
+        {/* <Pressable onPress={()=>pickImage()} style={styles.imageInput}>
         {image?<Image style={styles.imageStyle} source={{uri:image}}></Image>:loadingImage?<LoadingSpinner color={MAINCOLOR}></LoadingSpinner>:<Feather name="plus" size={24} color={MAINCOLOR} />}
-        </Pressable>
-        <Input value={title} setValue={setTitle} placeholder="Title"></Input>
-        <Input value={description} setValue={setDescription} placeholder="Description" multiline blurOnSubmit style={{height: 100}}></Input>
-        <Input value={price} setValue={setPrice} placeholder="Price" keyboardType={"number-pad"} ></Input>
-        <View style={styles.buttonContainer}>
-            <Pressable onPress={()=>handleSubmit()} style={[styles.submitButton, {backgroundColor:loading?LIGHTGREY:MAINCOLOR}]}>
-            {loading?<LoadingSpinner color={DARKGREY}></LoadingSpinner>:<Feather name="chevron-right" size={24} color="white" />}
-            </Pressable>
-        </View>
+        </Pressable> */}
+            <ImageInput image={image} setImage={setImage} title='Product Image'></ImageInput>
+            <Input value={title} setValue={setTitle} placeholder="Title"></Input>
+            <Input value={description} setValue={setDescription} placeholder="Description" multiline blurOnSubmit style={{height: 75}}></Input>
+            <Input value={price} setValue={setPrice} placeholder="Price" keyboardType={"number-pad"} ></Input>
+            <AddFileSvg style={{height:"40%"}}></AddFileSvg>
+
+            <View style={styles.buttonContainer}>
+                <Pressable onPress={()=>handleSubmit()} style={[styles.submitButton, {backgroundColor:loading?LIGHTGREY:MAINCOLOR}]}>
+                {loading?<LoadingSpinner color={DARKGREY}></LoadingSpinner>:<Text style={{color:"white", fontWeight:"600"}}>Go</Text>}
+                </Pressable>
+            
+            </View>
+            
+        <Snackbar color={DARKGREY} open={loading} icon={<LoadingSpinner color="white"></LoadingSpinner>} setOpen={setSuccess} textColor="white" ></Snackbar>
+        <Snackbar autoHideDuration={3000} color={MAINCOLOR} open={success} icon={<Feather name="check-circle" size={24} color="white" />} setOpen={setLoading} textColor="white" ></Snackbar>
+        <Snackbar autoHideDuration={3000} color={RED} open={error} icon={<Feather name="alert-circle" size={24} color="white" />} setOpen={setError} textColor="white" ></Snackbar>
     </View>
   )
 }
@@ -211,22 +238,22 @@ const styles = StyleSheet.create({
         justifyContent:"center",
     },
     imageInput:{
-        height: WINDOW_WIDTH/2,
-        width: WINDOW_WIDTH/2,
+        backgroundColor:"white",
+        height: WINDOW_WIDTH/2.5,
+        width: WINDOW_WIDTH/2.5,
         borderStyle: 'dashed',
         borderColor: MAINCOLOR,
         borderWidth: 2,
         borderRadius: 10,
         alignItems:"center",
         justifyContent:"center",
-        alignSelf:"center"
     },
     submitButton:{
         margin:"auto",
         height: WINDOW_WIDTH/5,
         width: WINDOW_WIDTH/5,
         backgroundColor:MAINCOLOR,
-        borderRadius:"50%",
+        borderRadius:1000,
         alignItems: "center",
         justifyContent:"center"
     },

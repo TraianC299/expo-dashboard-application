@@ -18,15 +18,16 @@ export const DataProvider = ({children}) => {
     const [data, setData]  = useState()
 
 
+   useEffect(()=>{
     SplashScreen.preventAutoHideAsync().catch(() => {
         /* reloading the app might trigger some race conditions, ignore them */
       });
+   },[])
 
 const fetchData = async () => {
     getAdminData(`stores/admin/${currentUser.uid}`, currentUser.token)
     .then(res => {
         res.data.orders =res.data.orders.sort((a,b)=>{ return a.incrementedId>b.incrementedId ? -1 : 1})
-
         setData(res.data)
     })
     .catch(err => {
@@ -36,22 +37,35 @@ const fetchData = async () => {
 
   
     useEffect(()=>{
-
         if(currentUser.uid && currentUser.token){
-            fetchData()
+            const fetchWithLoading = async() => {
+                setLoading(true)
+                await fetchData()
+
+            }
+            fetchWithLoading()
+
+        }else{
+            setLoading(false)
         }
-   
+    },[currentUser])
 
-    },[currentUser, reload])
-
-
-
+    useDidMountEffect(()=>{
+        fetchData()
+    },[reload])
 
     useDidMountEffect(()=>{
         setLoading(false)
-        SplashScreen.hideAsync();
 
     },[data])
+
+   
+
+
+    
+
+
+    
 
 
 

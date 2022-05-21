@@ -1,12 +1,24 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { StyleSheet, View, Text, Animated, Easing } from 'react-native'
 import { WINDOW_WIDTH } from '../../constants/Layout'
+import useDidMountEffect from '../../hooks/useDidMountEffect'
 
-const Snackbar = ({icon, color, textColor, open, setOpen, autoHideDuration}) => {
+
+
+interface SnackbarProps {
+    message: string,
+    open: string,
+    setOpen: React.Dispatch<React.SetStateAction<string>> ,
+    textColor: string,
+    icon: React.ReactNode,
+    color: string,
+    autoHideDuration?:number
+} 
+const Snackbar: React.FC<SnackbarProps> = ({icon, color, textColor, open, setOpen, autoHideDuration}) => {
     let [hideAnim, setHideAnim] = useState(new Animated.Value(-100));
 
 
-    const moveSnack = (value) => {
+    const moveSnack = (value:number) => {
         Animated.timing(
             hideAnim,
           { 
@@ -20,7 +32,7 @@ const Snackbar = ({icon, color, textColor, open, setOpen, autoHideDuration}) => 
 
 
 
-    useEffect(()=>{
+    useDidMountEffect(()=>{
         if(open){
             moveSnack(0)
             if(autoHideDuration){
@@ -32,6 +44,8 @@ const Snackbar = ({icon, color, textColor, open, setOpen, autoHideDuration}) => 
             }
             return
             
+        }else{
+            moveSnack(-100)
         }
     
     },[open])

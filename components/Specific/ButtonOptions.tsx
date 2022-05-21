@@ -1,5 +1,5 @@
 import React, {useEffect, useRef} from 'react'
-import { View, StyleSheet, Text, Pressable, Animated } from 'react-native'
+import { View, StyleSheet, Text, Pressable, Animated, Modal } from 'react-native'
 import { DARKGREY, LIGHTGREY, MAINCOLOR, WHITE, WHITEBLUE } from '../../constants/Colors'
 import CircleButton from '../Buttons/CircleButton'
 import { SimpleLineIcons } from '@expo/vector-icons'; 
@@ -8,10 +8,14 @@ import useDidMountEffect from '../../hooks/useDidMountEffect';
 import { Ionicons } from '@expo/vector-icons'; 
 
 
+interface Props{
+  options: Array<object>;
+  style: object;
+  open: boolean;
+  setOpen: Function;
+} 
 
-
-const ButtonOptions = ({options, style}) => {
-    const [showOptions, setShowOptions] = React.useState(false)
+const ButtonOptions:React.FC<Props> = ({options, style, open, setOpen}) => {
     let fadeAnim = useRef(new Animated.Value(0)).current;
 
     const fade = (value) => {
@@ -25,13 +29,14 @@ const ButtonOptions = ({options, style}) => {
     
 
       useDidMountEffect(()=>{
-        fade(showOptions ? 1 : 0)
-      },[showOptions])
+        fade(open ? 1 : 0)
+      },[open])
     
   return (
     < View style={{...style}}>
-        <CircleButton color={WHITEBLUE} icon={showOptions?<Ionicons name="close" size={WINDOW_HEIGHT*0.02} color={DARKGREY}/>:<SimpleLineIcons name="options-vertical" size={WINDOW_HEIGHT*0.02} color={DARKGREY} />}  onPress={()=>setShowOptions(previous=>!previous)}></CircleButton>
-        <Animated.View pointerEvents={showOptions?"auto":"none"} style={{...styles.optionsContainer,opacity: fadeAnim, } }>
+        <CircleButton color={WHITEBLUE} icon={open?<Ionicons name="close" size={WINDOW_HEIGHT*0.02} color={DARKGREY}/>:<SimpleLineIcons name="options-vertical" size={WINDOW_HEIGHT*0.02} color={DARKGREY} />}  onPress={()=>setOpen(previous=>!previous)}></CircleButton>
+        
+              <Animated.View onTouchEndCapture={()=>setOpen(false)} hitSlop={1000} pointerEvents={open?"auto":"none"} style={{...styles.optionsContainer,opacity: fadeAnim, zIndex:22222} }>
                  {options.map((option, index)=><Pressable 
                   key={index}
                   onPress={option.onPress} 
@@ -42,6 +47,8 @@ const ButtonOptions = ({options, style}) => {
                     <Text style={{color: option.color, fontWeight:"500", marginLeft:10}}>{option.title}</Text>
                 </Pressable>)} 
             </Animated.View>
+  
+           
     </View>
   )
 }

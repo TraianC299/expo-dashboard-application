@@ -10,7 +10,7 @@ import { WINDOW_HEIGHT } from '../constants/Layout';
 import Option from '../components/Input/Option';
 import { useData } from '../contexts/DataContext';
 import * as WebBrowser from 'expo-web-browser';
-import { updateData } from '../fetchFunctions';
+import { postImage, updateData } from '../fetchFunctions';
 import { useAuth } from '../contexts/AuthContext';
 import { globalStyles } from '../styles/global';
 import { BASE_URL } from '../constants/Vars';
@@ -19,6 +19,7 @@ import { Feather } from '@expo/vector-icons';
 import { FontAwesome5 } from '@expo/vector-icons'; 
 import { useSnack } from '../contexts/SnackContext';
 import useDidMountEffect from '../hooks/useDidMountEffect';
+import LoadingSpinner from '../components/Utils/LoadingSpinner';
 
 
 // Takes a data URI and returns the Data URI corresponding to the resized image at the wanted size.
@@ -88,7 +89,7 @@ const fetchImageFromUri = async (uri:string) => {
 export default function Settings({ navigation }: RootTabScreenProps<'TabOne'>) {
   const {data} = useData()
   const {setSnackObject}= useSnack()
-  const {currentUser} = useAuth()
+  const {currentUser, setCurrentUser} = useAuth()
   const [openDeliveryOptions, setOpenDeliveryOptions] = React.useState(false)
   const [color, setColor] = React.useState(data.themeColor)
   const [logo, setLogo] = React.useState(data.logo)
@@ -98,34 +99,12 @@ export default function Settings({ navigation }: RootTabScreenProps<'TabOne'>) {
 
 
   const [successUpdate, setSuccessUpdate] = React.useState("")
-  const [loadingUpdate, setLoadingUpdate] = React.useState(false)
+  const [loadingUpdate, setLoadingUpdate] = React.useState("")
   const [errorUpdate, setErrorUpdate] = React.useState("")
   const [result, setResult] = useState()
   const [loadingImage, setLoadingImage] = useState(false)
 
-  const uploadImage = async (base64Image:string) => {
-    if (base64Image) {
-      setLoadingImage(true)
-
-      await fetch(`${BASE_URL}images/upload/base64`, {
-        method: 'POST',
-        body: JSON.stringify({image : base64Image}),
-        headers:{
-          "Content-Type": "application/json",
-          "Accept": "application/json"
-        },
-        
-      })
-      .then((res) => res.json())
-      .catch(err=>console.log(err))
-      .then((jsonRes) => {
-        console.log(jsonRes)
-        setLoadingImage(false)
-          setLogo(jsonRes.data.url)
-        })
-        .catch(err=>console.log(err))
-      }
-  }
+  
   const pickImage = async () => {
     // No permissions request is necessary for launching the image library
     let result = await ImagePicker.launchImageLibraryAsync({
@@ -137,15 +116,24 @@ export default function Settings({ navigation }: RootTabScreenProps<'TabOne'>) {
 
 
     if (!result.cancelled) {
-      const img = await fetchImageFromUri(result.uri);
-      const base64 = await fileToDataUri(img)
-      uploadImage(base64)
-    }
-  };
+        setLoadingImage(true)
+        try{
+            
+            const response = await postImage(result, 500)
+            console.log(response)
 
+            setLoadingImage(false)
+            setLogo(response.data.url)
+        }catch(err){
+            console.log(JSON.stringify(err))
+            setLoadingImage(false)
+
+        }
+      
+  };}
 
   const handleUpdate = () => {
-    setLoadingUpdate(true)
+    setLoadingUpdate("Loading...")
     updateData(`stores/${data._id}`, {
         themeColor: color,
         logo: logo,
@@ -155,35 +143,39 @@ export default function Settings({ navigation }: RootTabScreenProps<'TabOne'>) {
     }, currentUser.token)
     .then((res)=>{
       console.log(res)
-        setLoadingUpdate(false)
-        setSuccessUpdate("Succesfuly updated settings")
+        setLoadingUpdate("")
+        setSuccessUpdate("Successfully updated settings")
     })
     .catch((err)=>{
         console.log(err)
-        setLoadingUpdate(false)
+        setLoadingUpdate("")
         setErrorUpdate("An error occured while updating settings. Try again.")
     })
 }
 
 
   const _handlePressButtonAsync = async () => {
-    let result = await WebBrowser.openBrowserAsync(`https://${data._id}.commo-store.com`);
+    await WebBrowser.openBrowserAsync(`https://${data._id}.commo-store.com`);
   };
 
   useDidMountEffect(()=>{
     setSnackObject({
-        autoHideDuration:3000,
-        setOpen:setSuccessUpdate,
-        textColor:"white", 
-        icon:loadingUpdate?<FontAwesome5 name="spinner" size={24} color="white" />:<Feather name="check-circle" size={24} color="white" /> ,
-        open:loadingUpdate?"Loading...":successUpdate, 
-        color:loadingUpdate?LIGHTGREY:MAINCOLOR
+      success: successUpdate,
+      error: errorUpdate,
+      loading: loadingUpdate,
+      setSuccess: setSuccessUpdate,
+      setError: setErrorUpdate,
+      setLoading: setLoadingUpdate
     })
-},[successUpdate])
+},[successUpdate, loadingUpdate, errorUpdate])
 
   return (
     <View style={globalStyles.screen}>
       <SafeAreaView style={styles.container}>
+      <Pressable onPress={()=>setCurrentUser({})} style={styles.settingContainer}>
+        <Text style={styles.title}>Log out</Text>
+              <Entypo name="chevron-right" size={24} color={DARKGREY} />
+        </Pressable>
         <Pressable onPress={()=>_handlePressButtonAsync()} style={styles.settingContainer}>
         <Text style={styles.title}>Open your website</Text>
               <Entypo name="chevron-right" size={24} color={DARKGREY} />
@@ -231,7 +223,7 @@ export default function Settings({ navigation }: RootTabScreenProps<'TabOne'>) {
            
             }}>
               <View style={{height: "auto", backgroundColor:"white", width: "100%",padding: 10, paddingBottom: 50, borderRadius: 14}}>
-                <Text style={{...globalStyles.h5, marginBottom: 20, marginTop: 10}}>Choose your delivery method:</Text>
+                <Text style={[globalStyles.h5, {marginBottom: 20, marginTop: 10}]}>Choose your delivery method:</Text>
                 <Option style={{marginBottom:5}} id={1} singleOption selected={selectedDeliveryOption} setSelected={setSelectedDeliveryOption}>
                   Delivery
                 </Option>
@@ -244,7 +236,7 @@ export default function Settings({ navigation }: RootTabScreenProps<'TabOne'>) {
               </View>
             </Pressable>
           </Modal>
-        <Pressable onPress={() => handleUpdate()} style={{...styles.button, alignSelf:"flex-end"}}>
+        <Pressable onPress={() => handleUpdate()} style={{...globalStyles.input, backgroundColor:MAINCOLOR, justifyContent:"center", alignItems:"center", alignSelf:"flex-end"}}>
                       <Text style={{
                         ...globalStyles.p,
                           fontWeight:"bold",
@@ -276,17 +268,8 @@ const styles = StyleSheet.create({
     height: WINDOW_HEIGHT/12,
     
   },
-  button: {
-    paddingTop: 15,
-        paddingBottom: 15,
-        paddingLeft: 25,
-        paddingRight: 25,
-        borderRadius: 14,
-        backgroundColor:MAINCOLOR
-  },
   container: {
     flex: 1,
-    padding: 20,
     alignItems: 'flex-start',
     justifyContent: 'flex-start',
   },

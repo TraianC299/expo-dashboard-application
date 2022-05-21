@@ -1,4 +1,4 @@
-import { MAINCOLOR, WHITEBLUE } from "../constants/Colors";
+import { MAINCOLOR, WHITE, WHITEBLUE } from "../constants/Colors";
 
 export const globalStyles = {
     h1:{
@@ -19,11 +19,6 @@ export const globalStyles = {
         fontSize:34,
         fontWeight: "400",
     },
-    dashedBorder: {
-        borderWidth: 2,
-        borderStyle:"dashed",
-        borderColor: MAINCOLOR,
-    },
     h5:{
         fontWeight: "400",
         fontSize: 24,
@@ -32,10 +27,15 @@ export const globalStyles = {
     h6:{
         fontWeight: "500",
         fontSize: 20,
-           },
+    },
     p:{
         fontSize: 16,
       },
+     dashedBorder: {
+        borderWidth: 2,
+        borderStyle:"dashed",
+        borderColor: MAINCOLOR,
+    },
     whiteContainer: {
         backgroundColor: "white",
         width: "100%",
@@ -47,6 +47,16 @@ export const globalStyles = {
     },
     screen:{
         flex:1, padding: 20, backgroundColor:WHITEBLUE
+    },
+    input:{
+            borderRadius: 10,
+            minHeight:50,
+            backgroundColor: WHITE,
+            width: '100%',
+            fontSize:18,
+            paddingLeft: 20,
+            paddingRight: 20,
+            marginBottom: 10,
     }
    
 

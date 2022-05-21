@@ -1,5 +1,6 @@
 import { Platform } from "react-native"
 import { BASE_URL } from "./constants/Vars"
+import * as ImageManipulator from 'expo-image-manipulator';
 
 
 
@@ -86,16 +87,20 @@ export async function postData(url, data) {
 
 
 
-export async function postImage(result){
-    const responseBlob = await fetch(result.uri);
+export async function postImage(result:object, dimensions:number){
+    const manipulatedImage = await ImageManipulator.
+manipulateAsync(result.uri, [
+{resize: {width: dimensions, height: dimensions}},
+],
+{compress: 0.5, format: ImageManipulator.SaveFormat.PNG});
+    const responseBlob = await fetch(manipulatedImage.uri);
     const img = await responseBlob.blob();
-    console.log(img._data)
     const data = new FormData();
   data.append('file', {
     name: img._data.name,
     type: img._data.type,
     uri: Platform.OS === 'ios' ? 
-    result.uri.replace('file://', '')
+    manipulatedImage.uri.replace('file://', '')
          : result.uri,
   });
 
@@ -107,6 +112,7 @@ export async function postImage(result){
           },
     })
     const json = await response.json()
+    console.log(JSON.stringify(json))
     return json
    
 

@@ -20,35 +20,39 @@ import { SnackProvider } from './contexts/SnackContext';
   const {currentUser} = useAuth()
   const {loading} = useData()
   const onLayoutRootView = useCallback(async () => {
-    // if (!loading) {
-    //   // This tells the splash screen to hide immediately! If we call this after
-    //   // `setAppIsReady`, then we may see a blank screen while the app is
-    //   // loading its initial state and rendering its first pixels. So instead,
-    //   // we hide the splash screen once we know the root view has already
-    //   // performed layout.
-    //   await SplashScreen.hideAsync();
-    // }
-  }, [loading]);
+    if (!currentUser.token) {
+      await SplashScreen.hideAsync();
+    }else{
+    if(!loading){
+      await SplashScreen.hideAsync();
+    }
+}
+      // This tells the splash screen to hide immediately! If we call this after
+      // `setAppIsReady`, then we may see a blank screen while the app is
+      // loading its initial state and rendering its first pixels. So instead,
+      // we hide the splash screen once we know the root view has already
+      // performed layout.
+    }
+  , [loading, currentUser]);
 
-  // Instruct SplashScreen not to hide yet, we want to do this manually
-SplashScreen.preventAutoHideAsync().catch(() => {
-  /* reloading the app might trigger some race conditions, ignore them */
-});
 
-  if (!isLoadingComplete ||loading) {
+
+
+  if (!isLoadingComplete) {
     return null;
   } else {
     return (
-        <SafeAreaProvider onLayout={onLayoutRootView}>
-         {
+    
+         
     !currentUser.token?
-    <LogIn></LogIn>
+    <SafeAreaProvider onLayout={onLayoutRootView}>
+      <LogIn></LogIn>
+    </SafeAreaProvider>
     :
-    <>
+    <SafeAreaProvider onLayout={onLayoutRootView}>
     <Navigation
      colorScheme={colorScheme} />
           <StatusBar />
-        </>}
         </SafeAreaProvider>
     );
   }
