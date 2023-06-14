@@ -171,7 +171,7 @@ export default function Settings({ navigation }: RootTabScreenProps<'TabOne'>) {
 
   return (
     <View style={globalStyles.screen}>
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={[styles.container, globalStyles.adroidSafeArea]}>
       <Pressable onPress={()=>setCurrentUser({})} style={styles.settingContainer}>
         <Text style={styles.title}>Log out</Text>
               <Entypo name="chevron-right" size={24} color={DARKGREY} />

@@ -1,9 +1,9 @@
-import { useRoute } from '@react-navigation/native'
+import { useNavigation, useRoute } from '@react-navigation/native'
 import React, { useEffect, useState } from 'react'
-import { Image, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, View } from 'react-native'
+import { Image, KeyboardAvoidingView, Platform, PlatformColor, Pressable, SafeAreaView, StyleSheet, Text, View } from 'react-native'
 import Input from '../components/Input/Input'
 import { DARKGREY, GREEN, LIGHTGREY, MAINCOLOR, RED, WHITE, WHITEBLUE } from '../constants/Colors'
-import { WINDOW_WIDTH } from '../constants/Layout'
+import { WINDOW_HEIGHT, WINDOW_WIDTH } from '../constants/Layout'
 import { useAuth } from '../contexts/AuthContext'
 import { useData } from '../contexts/DataContext'
 import { useSnack } from '../contexts/SnackContext'
@@ -17,6 +17,8 @@ import Snackbar from '../components/Utils/Snackbar'
 import ImageInput from '../components/Input/ImageInput'
 import AddFileSvg from '../assets/svg/addFiles.svg'
 import { globalStyles } from '../styles/global'
+import CircleButton from '../components/Buttons/CircleButton'
+import GoBackButton from '../components/Specific/GoBackButton'
 
 function makeid(length) {
     var result           = '';
@@ -36,6 +38,7 @@ const fetchImageFromUri = async (uri) => {
   };
 const AddProductModal = () => {
     const route = useRoute()
+    const navigation = useNavigation()
     const {editId } = route.params;
     const {data, setReload} = useData()
     const {currentUser} = useAuth()
@@ -58,7 +61,7 @@ const AddProductModal = () => {
 
     const [success, setSuccess] = React.useState(false)
     const [loading, setLoading] = React.useState(false)
-    const [loadingImage, setLoadingImage]  =useState(false)
+    const [loadingImage, setLoadingImage]  =useState("")
     const [error, setError] = React.useState(false)
 
 
@@ -75,7 +78,7 @@ const AddProductModal = () => {
     },[editId])
 
     const postProduct = () => {
-        setLoading(true)
+        setLoading("Loading...")
         updateData(`stores/${data._id}`, {
             products: [
                 ...data.products, {
@@ -93,7 +96,7 @@ const AddProductModal = () => {
         .then((res)=>{
             setSuccess("Succesfully added a product")
             setReload(previous=>!previous)
-            setLoading(false)
+            setLoading("")
             clearAll()
         })
     }
@@ -124,7 +127,7 @@ const AddProductModal = () => {
         .then((res)=>{
             setSuccess("Succesfully updated a product")
             setReload(previous=>!previous)
-            setLoading(false)
+            setLoading("")
             clearAll()
         })
     }
@@ -206,21 +209,29 @@ const AddProductModal = () => {
         {/* <Pressable onPress={()=>pickImage()} style={styles.imageInput}>
         {image?<Image style={styles.imageStyle} source={{uri:image}}></Image>:loadingImage?<LoadingSpinner color={MAINCOLOR}></LoadingSpinner>:<Feather name="plus" size={24} color={MAINCOLOR} />}
         </Pressable> */}
-            <ImageInput image={image} setImage={setImage} title='Product Image'></ImageInput>
-            <Input value={title} setValue={setTitle} placeholder="Title"></Input>
-            <Input value={description} setValue={setDescription} placeholder="Description" multiline blurOnSubmit style={{height: 75}}></Input>
-            <Input value={price} setValue={setPrice} placeholder="Price" keyboardType={"number-pad"} ></Input>
-            <AddFileSvg style={{height:"40%"}}></AddFileSvg>
+               <GoBackButton navigation={navigation}></GoBackButton>
+            <View >
+                <ImageInput image={image} setImage={setImage} title='Product Image'></ImageInput>
+                <Input value={title} setValue={setTitle} placeholder="Title"></Input>
+                <Input value={description} setValue={setDescription} placeholder="Description" multiline blurOnSubmit style={{height: 75}}></Input>
+                <Input value={price} setValue={setPrice} placeholder="Price" keyboardType={"number-pad"} ></Input>
+            </View>
+            <View style={{ flex:1}}>
+                <AddFileSvg style={{height:WINDOW_HEIGHT*0.4}}></AddFileSvg>
+                <Pressable style={{...globalStyles.input, backgroundColor:MAINCOLOR, justifyContent:"center", alignItems:"center"}}>
+                    <Text style={{color:WHITE, fontSize:18}}>Save</Text>
+                </Pressable>
+            </View>
 
-            <View style={styles.buttonContainer}>
+            {/* <View style={styles.buttonContainer}>
                 <Pressable onPress={()=>handleSubmit()} style={[styles.submitButton, {backgroundColor:loading?LIGHTGREY:MAINCOLOR}]}>
                 {loading?<LoadingSpinner color={DARKGREY}></LoadingSpinner>:<Text style={{color:"white", fontWeight:"600"}}>Go</Text>}
                 </Pressable>
             
-            </View>
+            </View> */}
             
-        <Snackbar color={DARKGREY} open={loading} icon={<LoadingSpinner color="white"></LoadingSpinner>} setOpen={setSuccess} textColor="white" ></Snackbar>
-        <Snackbar autoHideDuration={3000} color={MAINCOLOR} open={success} icon={<Feather name="check-circle" size={24} color="white" />} setOpen={setLoading} textColor="white" ></Snackbar>
+        <Snackbar color={DARKGREY} open={loading} icon={<LoadingSpinner color="white"></LoadingSpinner>} setOpen={setLoading} textColor="white" ></Snackbar>
+        <Snackbar autoHideDuration={3000} color={MAINCOLOR} open={success} icon={<Feather name="check-circle" size={24} color="white" />} setOpen={setSuccess} textColor="white" ></Snackbar>
         <Snackbar autoHideDuration={3000} color={RED} open={error} icon={<Feather name="alert-circle" size={24} color="white" />} setOpen={setError} textColor="white" ></Snackbar>
     </View>
   )
@@ -228,7 +239,7 @@ const AddProductModal = () => {
 
 const styles = StyleSheet.create({
     container: {
-        padding: 10,
+        padding: 20,
         flex:1,
         backgroundColor:WHITEBLUE
     },

@@ -24,7 +24,6 @@ interface Props {
     description:string,
     price:number,
     active:boolean,
-    quantity:number,
     index:number,
     id:string,
 }
@@ -77,7 +76,7 @@ const Product: React.FC<Props> = ({image, description, title, id, price, active,
 
     return (
         <>
-        <View style={{...styles.constainer,zIndex: showOptions?1000:0-index, elevation:showOptions?1:0-index}} >
+        <View style={{...styles.container,zIndex: showOptions?1000:0-index, elevation:showOptions?1:0-index}} >
                     <ButtonOptions open={showOptions} setOpen={setShowOptions} style={{zIndex:9999, position:"absolute", top:10, right:10}} options={[
                         {title: 'Delete Item', icon:<MaterialIcons name="delete-outline" size={WINDOW_HEIGHT*0.025} color={RED} />, onClick: ()=>{deleteDocument(`shops/${data.id}/products`, id).then(()=>setReload(previous=>!previous))}, color:RED},
                         {title: 'Edit Item', icon:<Feather name="edit-2" size={WINDOW_HEIGHT*0.025} color={MAINCOLOR} />, onPress: ()=>{navigation.navigate('AddProductModal', {
@@ -86,7 +85,7 @@ const Product: React.FC<Props> = ({image, description, title, id, price, active,
                         {title: loading?"Loading":active?'Disable Item':"Enable Item", icon:loading?<FontAwesome5 name="spinner" size={WINDOW_HEIGHT*0.025} color="black" />:<Feather name="toggle-left" size={24} color={active?DARKGREY:GREEN} />, onPress: ()=>toggleItem(), color:active?DARKGREY:GREEN},
                     ]}></ButtonOptions> 
                 <View>
-                    <Image  height={140} width={140} loadingIndicatorSource={{uri:"https://pukkaberlin.com/wp-content/themes/barberry/images/placeholder.jpg"}} blurRadius={active?0:2} source={{uri:image}} style={{...styles.image}}>
+                    <Image  height={120} width={120} loadingIndicatorSource={{uri:"https://pukkaberlin.com/wp-content/themes/barberry/images/placeholder.jpg"}} blurRadius={active?0:2} source={{uri:image}} style={{...styles.image}}>
                     </Image>
                 </View>
             <View style={styles.info}>
@@ -108,15 +107,15 @@ export default Product
 
 
 const styles = StyleSheet.create({
-    constainer:{
-        height: 150,
+    container:{
+        height: 130,
         ...globalStyles.whiteContainer,
         padding: 5
     },
     image:{
         zIndex:1,
-        height: 140,
-        width: 140,
+        height: 120,
+        width: 120,
         padding: 10,
         borderRadius: 8,
         overflow: "hidden",

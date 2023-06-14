@@ -4,21 +4,21 @@ import useCachedResources from './hooks/useCachedResources';
 import useColorScheme from './hooks/useColorScheme';
 import Navigation from './navigation';
 import LogIn from './screens/LogIn';
-import {Text, View, ActivityIndicator} from 'react-native';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { DataProvider, useData } from './contexts/DataContext';
-import { MAINCOLOR } from './constants/Colors';
-import { useFonts } from 'expo-font';
-import { useCallback, useEffect } from 'react';
-import useDidMountEffect from './hooks/useDidMountEffect';
+import { useCallback } from 'react';
 import * as SplashScreen from 'expo-splash-screen';
 import { SnackProvider } from './contexts/SnackContext';
+
+
 
  function NoContextApp() {
   const isLoadingComplete = useCachedResources();
   const colorScheme = useColorScheme();
   const {currentUser} = useAuth()
-  const {loading} = useData()
+  const {loading, setReload} = useData()
+
+
   const onLayoutRootView = useCallback(async () => {
     if (!currentUser.token) {
       await SplashScreen.hideAsync();
@@ -35,7 +35,9 @@ import { SnackProvider } from './contexts/SnackContext';
     }
   , [loading, currentUser]);
 
-
+  // TaskManager.defineTask('fetch-after-notification', async () => {
+  //   setReload(previous=>!previous)
+  // })
 
 
   if (!isLoadingComplete) {
@@ -44,6 +46,7 @@ import { SnackProvider } from './contexts/SnackContext';
     return (
     
          
+
     !currentUser.token?
     <SafeAreaProvider onLayout={onLayoutRootView}>
       <LogIn></LogIn>

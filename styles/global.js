@@ -1,4 +1,5 @@
 import { MAINCOLOR, WHITE, WHITEBLUE } from "../constants/Colors";
+import Constants from 'expo-constants';
 
 export const globalStyles = {
     h1:{
@@ -25,8 +26,7 @@ export const globalStyles = {
         
     },
     h6:{
-        fontWeight: "500",
-        fontSize: 20,
+        fontSize: 18,
     },
     p:{
         fontSize: 16,
@@ -45,9 +45,13 @@ export const globalStyles = {
         flexDirection:"row",
         marginBottom:10,
     },
-    screen:{
-        flex:1, padding: 20, backgroundColor:WHITEBLUE
+    safeArea:{
+        paddingTop:Constants.statusBarHeight
     },
+    screen:{
+        flex:1, paddingHorizontal: 20, backgroundColor:WHITEBLUE
+    },
+   
     input:{
             borderRadius: 10,
             minHeight:50,

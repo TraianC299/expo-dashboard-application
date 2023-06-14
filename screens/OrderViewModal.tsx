@@ -3,7 +3,7 @@ import useDidMountEffect from '../hooks/useDidMountEffect';
 import {useState} from 'react';
 import { Modal, Platform, SafeAreaView, StyleSheet, Text, View } from 'react-native';
 import CircleButton from '../components/Buttons/CircleButton';
-import { DARKGREY, LIGHTGREY, MAINCOLOR } from '../constants/Colors';
+import { DARKGREY, LIGHTGREY, MAINCOLOR, WHITE, WHITEBLUE } from '../constants/Colors';
 import { AntDesign } from '@expo/vector-icons'; 
 import { useData } from '../contexts/DataContext';
 import { convertTimestampToDate } from '../components/Specific/Order';
@@ -14,6 +14,7 @@ import { getItemById } from '../components/utilityFunctions';
 import { WINDOW_HEIGHT, WINDOW_WIDTH } from '../constants/Layout';
 import { globalStyles } from '../styles/global';
 import { capitalizeFirstLetter } from '../UtilityFunctions';
+import GoBackButton from '../components/Specific/GoBackButton';
 const isEmpty = (obj:Object)=>{
     return Object.keys(obj).length === 0;
 }
@@ -33,16 +34,17 @@ interface OrderObjectInterface {
 
 const OrderViewModal = ({}) => {
     const route = useRoute()
+    
     const navigation = useNavigation()
     const { orderId } = route.params;
 
     const [selectedOrderObject, setSelectedObject] = useState<OrderObjectInterface>({})
   const [selectedProducts, setSelectedProducts] = useState([])
-  const {data} = useData()
+  const {orders, data} = useData()
 
   useEffect(()=>{
       if(orderId){
-          const order = data.orders.find(order=>order.incrementedId === orderId)
+          const order = orders.find(order=>order.incrementedId === orderId)
       setSelectedObject(previous=>{const founded = {...order};delete founded.products; return founded})
           if(order){
               setSelectedProducts(order.products.map(product => {return {...data.products.find(prod => prod.id === product.id), quantity: product.quantity}}))
@@ -59,11 +61,11 @@ const OrderViewModal = ({}) => {
 console.log(selectedOrderObject)
 
   return (
-    <View style={{flex:1, backgroundColor:"white"}}>
+    <View style={{flex:1, backgroundColor:WHITEBLUE}}>
 
     {!isEmpty(selectedOrderObject)?
-        <SafeAreaView style={{flex:1,padding: 20, paddingTop:WINDOW_HEIGHT*0.06}}>
-               { Platform.OS === 'ios'?null:<CircleButton onPress={()=>navigation.goBack()} style={{position:"absolute", top:WINDOW_HEIGHT*0.02, right:WINDOW_HEIGHT*0.02}} color={`${MAINCOLOR}20`} icon={<AntDesign name="close" size={WINDOW_HEIGHT*0.02} color="black" />}></CircleButton>}
+        <SafeAreaView style={{paddingTop:20}}>
+               <GoBackButton navigation={navigation}></GoBackButton>
         <View style={styles.container}>
             <View style={[styles.orderName, {marginBottom:WINDOW_HEIGHT/30}]}>
                 <Text style={{...globalStyles.h4, color: MAINCOLOR, fontWeight:"600"}}>Comanda #{orderId}</Text>

@@ -1,9 +1,9 @@
-import React, { useState } from 'react'
-import { StyleSheet, View , Text, Pressable} from 'react-native';
+import React, { useRef, useState } from 'react'
+import { StyleSheet, View , Text, Pressable, Animated, Easing, LayoutAnimation} from 'react-native';
 import CircleButton from '../Buttons/CircleButton';
 import { Feather } from '@expo/vector-icons'; 
 import { SimpleLineIcons } from '@expo/vector-icons'; 
-import { BORDERCOLOR, DARKGREY, GREEN, LIGHTGREY, MAINCOLOR, RED } from '../../constants/Colors';
+import { BORDERCOLOR, DARKGREY, GREEN, MAINCOLOR, RED } from '../../constants/Colors';
 import {WINDOW_HEIGHT, WINDOW_WIDTH} from '../../constants/Layout';
 import { useNavigation } from '@react-navigation/native';
 import ButtonOptions from './ButtonOptions';
@@ -18,15 +18,16 @@ import { globalStyles } from '../../styles/global';
 import { getStatus } from '../../constants/Vars';
 
 
+
 interface ProductInterface {
   id: string,
   price: number,
   quantity: number,
 }
 interface OrderInterface {
-  id: String,
-  globalId: String,
-  selectedProducts: Array<ProductInterface>,
+  id: number,
+  globalId: string,
+  price: number,
   index:number, 
   status: number
 }
@@ -52,7 +53,7 @@ const getPrice = (cart:Array<ProductInterface>) => {
   }
 }
 
-const Order:React.FC<OrderInterface> = ({status, id, globalId, selectedProducts, index}) => {
+const Order:React.FC<OrderInterface> = ({status, id, globalId, price, index}) => {
   const navigation = useNavigation()
   const [loading, setLoading] = useState("")
   const [successUpdateStatus, setSuccessUpdateStatus] = useState("")
@@ -61,9 +62,8 @@ const Order:React.FC<OrderInterface> = ({status, id, globalId, selectedProducts,
   const {currentUser} = useAuth()
   const {setReload, data} = useData()
   const [showOptions, setShowOptions] = useState<boolean>(false)
+  const [deleted, setDeleted]   = useState(false)
   
-
-
 
 const changeStatus = async (status:number, succesMessage:string) => {
   setLoading("Loading...")
@@ -87,6 +87,9 @@ const changeStatus = async (status:number, succesMessage:string) => {
 
 
 
+
+
+
 useDidMountEffect(()=>{
   setTimeout(()=>{
     setReload(previous=>!previous)
@@ -101,20 +104,42 @@ setSnackObject({
   setLoading: setLoading
 })
 
+
 },[successUpdateStatus, loading])
+
+
+
+const getOptions = (status) => {
+  const options = [{title: 'Received Order', icon:<Feather name="chevrons-right" size={24} color={MAINCOLOR} />, onPress: ()=>changeStatus(1, "Succesfully received order"), color:MAINCOLOR},
+  {title: 'Finish Order', icon:<MaterialIcons name="done-all" size={24} color={GREEN} />, onPress: ()=>changeStatus(2, "Succesfully finished order"), color:GREEN},
+  {title: 'Cancel Order', icon:<Feather name="trash-2" size={24} color={RED} />, onPress: ()=>changeStatus(3, "Succesfully canceled order"), color:RED}
+]
+  switch (status){
+    case 2: {
+      options.splice(1, 1)
+      return options;
+    }
+    case 3:{
+      options.splice(2, 1)
+      return options;
+    }
+    default:{
+      return options
+    }
+  }
+}
   return (
-    <Pressable  style={{...styles.orderContainer, backgroundColor:"white", zIndex:showOptions?1000:0-index, elevation:showOptions?1000:0-index}}>
-       <ButtonOptions open={showOptions} setOpen={setShowOptions} style={{zIndex:9999, position:"absolute", top:WINDOW_HEIGHT*0.0175, right:WINDOW_HEIGHT*0.0175}} options={[
-         {title: 'Received Order', icon:<Feather name="chevrons-right" size={24} color={MAINCOLOR} />, onPress: ()=>changeStatus(1, "Succesfully received order"), color:MAINCOLOR},
-         {title: 'Finish Order', icon:<MaterialIcons name="done-all" size={24} color={GREEN} />, onPress: ()=>changeStatus(2, "Succesfully finished order"), color:GREEN},
-         {title: 'Cancel Order', icon:<Feather name="trash-2" size={24} color={RED} />, onPress: ()=>changeStatus(3, "Succesfully canceled order"), color:RED},
-                    ]}></ButtonOptions>
-         <Pressable style={{maxWidth:"20%"}} onPress={() => navigation.navigate('OrderModal', {
-      orderId: id
-    })}>
+ 
+    <Animated.View  style={{...styles.orderContainer, backgroundColor:"white", zIndex:showOptions?1000:0-index, elevation:showOptions?1000:0-index}}>
+       <ButtonOptions open={showOptions} setOpen={setShowOptions} style={{zIndex:9999, position:"absolute", top:WINDOW_HEIGHT*0.0175, right:WINDOW_HEIGHT*0.0175}} options={getOptions(status)}></ButtonOptions>
+         <Pressable style={{maxWidth:"20%"}} 
+         onPress={() => navigation.navigate('OrderModal', {
+          orderId: id
+        })}
+        >
            <Text style={{fontWeight:"bold"}}>#{id}</Text>
          </Pressable>
-         <Text style={{maxWidth:"20%"}}>{getPrice(selectedProducts)} {data.currency}</Text>
+         <Text style={{maxWidth:"20%"}}>{price} {data.currency}</Text>
          <View style={{...styles.status, backgroundColor:getStatus(status).color }}>
            {loading?<LoadingSpinner color="white"></LoadingSpinner>:<Text style={{color: "white"}}>{getStatus(status).title}</Text>}
           </View>
@@ -122,7 +147,7 @@ setSnackObject({
           
              
          </View>
-    </Pressable>
+    </Animated.View>
   )
 }
 

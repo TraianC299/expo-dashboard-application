@@ -2,9 +2,17 @@ import React from 'react'
 import { View, StyleSheet, Pressable } from 'react-native'
 import { WINDOW_HEIGHT } from '../../constants/Layout'
 
-const CircleButton = ({color, icon, style, ...props}) => {
+
+interface Props{
+  color:string,
+  icon:any,
+  style:object,
+  props:any,
+  onPress:Function
+}
+const CircleButton:React.FC<Props> = ({color, icon, style, onPress, ...props}) => {
   return (
-    <Pressable {...props} style={{...styles.container, backgroundColor:color, ...style}} >
+    <Pressable {...props} onPress={()=>onPress()} style={{...styles.container, backgroundColor:color, ...style}} >
       {icon}
     </Pressable>
   )
